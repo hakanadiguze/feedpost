@@ -797,11 +797,12 @@ function renderDetailMeta(s){
   document.getElementById('dt-ctrl').innerHTML=s.open
     ?`<button class="btn b-rd" onclick="closeSessionDB('${code}')">🔴 Close Session</button>
       <button class="btn b-out" onclick="cpLink('${code}')">📋 Copy Link</button>
+      <button class="btn b-tl b-sm" onclick="downloadPDF('${code}')">⬇️ Save PDF</button>
       <span class="tsm tmd" style="align-self:center">To participate: open the link in a new tab</span>`
     :`<span class="bdg brd" style="padding:9px 16px;font-size:13px">Session closed</span>
       <button class="btn b-or b-sm" onclick="reopenSession('${code}')">🟢 Reopen Session</button>
       <button class="btn b-out" onclick="cpLink('${code}')">📋 Copy Link</button>
-      <button class="btn b-tl b-sm" onclick="downloadPDF('${code}')">⬇️ Download PDF</button>`;
+      <button class="btn b-tl b-sm" onclick="downloadPDF('${code}')">⬇️ Save PDF</button>`;
 }
 
 async function closeSessionDB(code){
@@ -912,17 +913,31 @@ async function downloadPDF(code){
 // ═══════════════════════════════════════════════════
 // LIVE LISTENER
 // ═══════════════════════════════════════════════════
+let _liveDebounce=null;
 function startLive(code){
   stopLive();
   S.liveRef=dbOn('sessions/'+code,data=>{
     if(!data)return;
     S.sess=data;
-    if(document.getElementById('fb-screen').classList.contains('on'))
-      renderBoard(data);
-    if(document.getElementById('v-detail').style.display!=='none'&&S.code===code){
-      document.getElementById('dt-board').innerHTML=buildBoard(data,true);
-      renderDetailMeta(data);
-    }
+    clearTimeout(_liveDebounce);
+    _liveDebounce=setTimeout(()=>{
+      if(document.getElementById('fb-screen').classList.contains('on')){
+        // Don't destroy active spawn or edit when live update arrives
+        const hasSpawn=!!document.getElementById('pi-spawn');
+        const hasEdit=!!editId;
+        if(!hasSpawn&&!hasEdit){
+          renderBoard(data);
+        } else {
+          // Soft update: only update counts and other non-destructive parts
+          // by saving current board state and re-rendering after a pause
+          // For now just skip re-render if user is mid-action
+        }
+      }
+      if(document.getElementById('v-detail').style.display!=='none'&&S.code===code){
+        document.getElementById('dt-board').innerHTML=buildBoard(data,true);
+        renderDetailMeta(data);
+      }
+    },400);
   });
 }
 function stopLive(){dbOff(S.liveRef);S.liveRef=null;}
@@ -1012,14 +1027,16 @@ function filterVisible(items,adminView,s){
 
 function qHd(title,num,qid,cnt,isR,adminView,s){
   const nEl=num?`<div class="q-num">${num}</div>`:'';
-  const addBtn=!adminView&&s.open&&!isR?`<button class="add-btn" onclick="spawnNew('${qid}')">+ Add</button>`:'';
+  const addBtn=!adminView&&s.open&&!isR?`<button class="add-btn" data-qid="${esc(qid)}" onclick="spawnNew(this.dataset.qid)">+ Add</button>`:'';
   return`<div class="q-hd">${nEl}<div class="q-ttl">${esc(title)}</div>${addBtn}<span class="bdg bor">${cnt}</span></div>`;
 }
 
 function zoneH(qid,items,adminView,s){
   const canAdd=!adminView&&s.open;
   const dbl=canAdd?`ondblclick="spawnNew('${qid}')"`:'' ;
-  return`<div class="pi-zone" id="zone-${qid}" ${dbl}><div class="pi-grid" id="grid-${qid}">${items.map(fb=>piH(fb,adminView,s)).join('')}</div>${canAdd?`<div class="pi-hint" ondblclick="spawnNew('${qid}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Double-click here or click + to add a post-it</div>`:''}</div>`;
+  const hintDbl=canAdd?`data-qid="${esc(qid)}" ondblclick="spawnNew(this.dataset.qid)"`:'';
+  const zoneDbl=canAdd?`data-qid="${esc(qid)}" ondblclick="spawnNew(this.dataset.qid)"`:'';
+  return`<div class="pi-zone" id="zone-${qid}" ${zoneDbl}><div class="pi-grid" id="grid-${qid}">${items.map(fb=>piH(fb,adminView,s)).join('')}</div>${canAdd?`<div class="pi-hint" ${hintDbl}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Double-click here or click + to add a post-it</div>`:''}</div>`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -1057,8 +1074,7 @@ function ratingH(q,s,adminView){
     <div class="rcards">${cards}</div>
     <div class="rc-lbl"><span>😞 Very Poor</span><span>Excellent 😍</span></div>
     ${canRate?`<div class="r-sub-row">
-        <button class="btn b-or b-sm" onclick="submitRating('${q.id}')">Submit Rating</button>
-        <span class="r-sel-txt" id="rsd-${q.id}">${cur?`Selected: <strong>${EM[cur]} ${cur} — ${LB[cur]}</strong>`:'No selection yet'}</span>
+        <span class="r-sel-txt" id="rsd-${q.id}" style="font-size:13px;color:var(--md)">Click a card to submit your rating</span>
       </div>`
     :done?`<div class="r-done">✅ You submitted your rating for this question</div>`
     :adminView?`<div style="font-size:13px;color:var(--md);margin-bottom:16px">Admin view</div>`
@@ -1073,18 +1089,19 @@ function ratingH(q,s,adminView){
 }
 
 function selRating(qid,n){
-  selR[qid]=n;
+  // Visual feedback immediately
   for(let i=1;i<=5;i++){const c=document.getElementById(`rc-${qid}-${i}`);if(c)c.classList.toggle('sel',i===n);}
-  const d=document.getElementById('rsd-'+qid);
-  if(d)d.innerHTML=`Selected: <strong>${EM[n]} ${n} — ${LB[n]}</strong>`;
+  // Auto-submit after brief delay so user sees the selection
+  setTimeout(()=>submitRating(qid,n),300);
 }
 
-async function submitRating(qid){
-  const n=selR[qid]; if(!n)return toast('Select a rating first','er');
+async function submitRating(qid,n){
+  if(S.rated.has(qid))return; // already submitted
+  if(!n)return;
   const path='sessions/'+S.code+'/ratings/'+qid+'/'+n;
   const cur=(await dbG(path))||0;
   await dbS(path,cur+1);
-  S.rated.add(qid); saveV(); delete selR[qid];
+  S.rated.add(qid); saveV();
   toast('Rating submitted! '+EM[n]);
 }
 
@@ -1117,21 +1134,20 @@ function renderBoard(s){document.getElementById('fb-brd').innerHTML=buildBoard(s
 let actQid=null;
 
 function spawnNew(qid){
+  // Remove any existing spawn
   const old=document.getElementById('pi-spawn');if(old)old.remove();
   if(!S.sess?.open)return;
   actQid=qid;
-  const grid=document.getElementById('grid-'+qid);
-  if(!grid){
-    // grid might not exist yet if board was just rendered — try zone
+  // Find the grid — it always exists in buildBoard output
+  let targetGrid=document.getElementById('grid-'+qid);
+  if(!targetGrid){
+    // Last resort: find zone and create grid
     const zone=document.getElementById('zone-'+qid);
     if(!zone)return;
-    // append grid inside zone
-    const newGrid=document.createElement('div');
-    newGrid.className='pi-grid'; newGrid.id='grid-'+qid;
-    zone.insertBefore(newGrid,zone.firstChild);
+    targetGrid=document.createElement('div');
+    targetGrid.className='pi-grid';targetGrid.id='grid-'+qid;
+    zone.insertBefore(targetGrid,zone.firstChild);
   }
-  const targetGrid=document.getElementById('grid-'+qid);
-  if(!targetGrid)return;
   const div=document.createElement('div');
   div.className='pinew'; div.id='pi-spawn';
   div.innerHTML=`<div class="pn-au">${esc(S.who||'Anonymous')}</div><textarea class="pn-ta" id="pn-ta" placeholder="Type your thought…" rows="4"></textarea><div class="pn-ac"><button class="pn-post" onclick="postNew()">Post 📌</button><button class="pn-cx" onclick="cancelNew()">Cancel</button></div>`;
@@ -1250,8 +1266,11 @@ function init(){
   },1500);
 }
 
-document.addEventListener('fp-ready',()=>setTimeout(init,100));
-setTimeout(init,2500);
+let _initDone=false;
+function safeInit(){if(_initDone)return;_initDone=true;init();}
+document.addEventListener('fp-ready',()=>setTimeout(safeInit,100));
+// Fallback only if fp-ready never fires (no firebase module loaded at all)
+setTimeout(()=>{if(!_initDone)safeInit();},3000);
 </script>
 </body>
 </html>
