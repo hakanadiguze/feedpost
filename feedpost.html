@@ -524,27 +524,19 @@ const dOff=r=>{ if(r)F().off(r); };
 const S={
   admin:null, sess:null, code:null, who:null,
   pendQs:[], pendQT:null, liveRef:null,
-  newPIqid:null,  // which question the new post-it modal is for
-  // Per-session localStorage keys scoped by code
-  voted:new Set(),
-  rated:{},  // { qid: chosenN }  — allows change
+  newPIqid:null,
+  voted:new Set(),  // upvotes — persisted per device
+  rated:{},         // { qid: n } — NOT persisted, resets every session entry
 };
-
+// voted stays in localStorage (upvotes should remember per device)
+// rated is purely in-memory so different people on same browser start fresh
 function vKey(){ return 'fp6v_'+(S.code||''); }
-function rKey(){ return 'fp6r_'+(S.code||''); }
 function loadLS(){
-  try{
-    S.voted=new Set(JSON.parse(localStorage.getItem(vKey())||'[]'));
-    S.rated=JSON.parse(localStorage.getItem(rKey())||'{}');
-  }catch(e){}
+  try{ S.voted=new Set(JSON.parse(localStorage.getItem(vKey())||'[]')); }catch(e){}
 }
 function saveLS(){
-  try{
-    localStorage.setItem(vKey(),JSON.stringify([...S.voted]));
-    localStorage.setItem(rKey(),JSON.stringify(S.rated));
-  }catch(e){}
+  try{ localStorage.setItem(vKey(),JSON.stringify([...S.voted])); }catch(e){}
 }
-
 // ══════════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════════
@@ -853,7 +845,7 @@ async function lookupCode(pre){
     const s=await dG('sessions/'+code);
     if(!s){toast('Session not found','er');return;}
     if(!s.open){toast('This session is closed','er');return;}
-    S.sess=s; S.code=code; loadLS();
+    S.sess=s; S.code=code; S.rated={}; loadLS(); // reset ratings for new session entry
     document.getElementById('js-sn').textContent=s.name;
     document.getElementById('js-sd').textContent=s.desc||'';
     const lbl=document.getElementById('js-name-lbl');
@@ -923,17 +915,15 @@ const EM={1:'😞',2:'😕',3:'😐',4:'😊',5:'😍'};
 const LB={1:'Very Poor',2:'Poor',3:'Okay',4:'Good',5:'Excellent'};
 
 function ratingH(q,s,adminView){
-  const R=s.ratings?.[q.id]||{1:0,2:0,3:0,4:0,5:0};
-  const total=Object.values(R).reduce((a,n)=>a+Number(n),0);
-  const avg=total?(Object.entries(R).reduce((a,[k,v])=>a+k*v,0)/total).toFixed(1):null;
-  const myRating=S.rated[q.id]||null; // null = not yet rated
+  const myRating=S.rated[q.id]||null;
   const canRate=!adminView&&s.open;
 
   const cards=[1,2,3,4,5].map(n=>{
     const isMine=myRating===n;
-    const selCls=isMine?' sel':'';
-    const sub=myRating&&!isMine?' style="opacity:.35"':''; // dim others when rated
-    return`<div class="rc${selCls}"${sub} onclick="${canRate?`selectRating('${q.id}',${n})`:''}" style="cursor:${canRate?'pointer':'default'}">
+    const dimmed=myRating&&!isMine?' style="opacity:.3;transform:scale(.9)"':'';
+    const cls='rc'+(isMine?' sel':'');
+    const click=canRate?`onclick="selectRating('${q.id}',${n})"`:'' ;
+    return`<div class="${cls}"${dimmed} ${click} style="cursor:${canRate?'pointer':'default'}">
       <div class="rc-em">${EM[n]}</div><div class="rc-n">${n}</div>
     </div>`;
   }).join('');
@@ -941,21 +931,16 @@ function ratingH(q,s,adminView){
   let statusHtml='';
   if(canRate&&myRating){
     statusHtml=`<div class="r-status">You rated <strong>${EM[myRating]} ${myRating} — ${LB[myRating]}</strong>
-      <button class="r-change-btn" onclick="changeRating('${q.id}',${myRating})">Change ↩</button></div>`;
+      <span style="font-size:12px;color:var(--md);margin-left:8px">(Click another card to change)</span></div>`;
   } else if(canRate&&!myRating){
     statusHtml=`<div class="r-status" style="color:var(--md)">Click an emoji to submit your rating</div>`;
   } else if(!canRate&&myRating){
     statusHtml=`<div class="r-done">✅ You rated ${EM[myRating]} ${myRating} — ${LB[myRating]}</div>`;
   } else if(adminView){
-    statusHtml=`<div class="r-status" style="color:var(--md)">Admin view</div>`;
+    statusHtml='';
   } else {
     statusHtml=`<div class="r-status" style="color:var(--md)">Session closed</div>`;
   }
-
-  const bars=total?[1,2,3,4,5].map(n=>{
-    const cnt=Number(R[n]||0);const pct=Math.round(cnt/total*100);
-    return`<div class="rb-l">${EM[n]} <span style="font-size:11px;color:var(--md)">${n}</span></div><div class="rb-tr"><div class="rb-fi" style="width:${pct}%"></div></div><div class="rb-c">${cnt}</div>`;
-  }).join(''):'';
 
   return`<div class="rbox">
     <div class="rbox-ttl">${esc(q.text)}</div>
@@ -963,36 +948,32 @@ function ratingH(q,s,adminView){
     <div class="rcards">${cards}</div>
     <div class="rc-lbl"><span>😞 Very Poor</span><span>Excellent 😍</span></div>
     ${statusHtml}
-    ${(s.isPublic||adminView)&&total?`<div class="r-sep"></div><div class="r-res-ttl">Results · ${total} response${total!==1?'s':''}</div><div class="rbars">${bars}</div><div class="r-avg"><div class="r-avg-n">${avg}</div><div class="r-avg-s">/ 5 average</div></div>`:''}
   </div>`;
 }
 
 async function selectRating(qid,n){
   if(!S.sess?.open)return;
   const prev=S.rated[qid]||null;
-  // Optimistic UI
-  S.rated[qid]=n; saveLS();
-  // If changing: decrement old, increment new
-  if(prev&&prev!==n){
-    const oldPath='sessions/'+S.code+'/ratings/'+qid+'/'+prev;
-    const newPath='sessions/'+S.code+'/ratings/'+qid+'/'+n;
-    const [oldV,newV]=await Promise.all([dG(oldPath),dG(newPath)]);
-    await Promise.all([dS(oldPath,Math.max(0,(oldV||0)-1)),dS(newPath,(newV||0)+1)]);
-  } else if(!prev){
-    const path='sessions/'+S.code+'/ratings/'+qid+'/'+n;
-    const cur=(await dG(path))||0;
-    await dS(path,cur+1);
+  if(prev===n)return; // same card tapped again — ignore
+  // Update memory
+  S.rated[qid]=n;
+  // If changing: decrement old count, increment new
+  if(prev){
+    const [oldV,newV]=await Promise.all([
+      dG('sessions/'+S.code+'/ratings/'+qid+'/'+prev),
+      dG('sessions/'+S.code+'/ratings/'+qid+'/'+n)
+    ]);
+    await Promise.all([
+      dS('sessions/'+S.code+'/ratings/'+qid+'/'+prev,Math.max(0,(oldV||0)-1)),
+      dS('sessions/'+S.code+'/ratings/'+qid+'/'+n,(newV||0)+1)
+    ]);
+    toast('Rating updated to '+EM[n]);
+  } else {
+    // First time rating
+    const cur=(await dG('sessions/'+S.code+'/ratings/'+qid+'/'+n))||0;
+    await dS('sessions/'+S.code+'/ratings/'+qid+'/'+n,cur+1);
+    toast(EM[n]+' Rated!');
   }
-  toast(EM[n]+' Rated!');
-}
-
-async function changeRating(qid,prev){
-  // Remove current vote so user can pick again
-  const path='sessions/'+S.code+'/ratings/'+qid+'/'+prev;
-  const cur=(await dG(path))||0;
-  await dS(path,Math.max(0,cur-1));
-  delete S.rated[qid]; saveLS();
-  toast('Select a new rating');
 }
 
 // ══════════════════════════════════════════════════
