@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0YXR6DV4WN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0YXR6DV4WN');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FeedPost</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF6B35'/><rect x='15' y='20' width='70' height='60' rx='10' fill='%2300C9B8'/><rect x='28' y='38' width='44' height='7' rx='3.5' fill='white'/><rect x='28' y='52' width='28' height='7' rx='3.5' fill='white'/></svg>">
@@ -525,14 +533,16 @@ const S={
   admin:null, sess:null, code:null, who:null,
   pendQs:[], pendQT:null, liveRef:null,
   newPIqid:null,
-  voted:new Set(),  // upvotes — persisted per device
-  rated:{},         // { qid: n } — NOT persisted, resets every session entry
+  instanceId:null,  // unique per session ENTRY — ensures each join is independent
+  voted:new Set(),  // fbIds upvoted in THIS session entry
+  rated:{},         // { qid: n } — in-memory only, resets on each entry
 };
-// voted stays in localStorage (upvotes should remember per device)
-// rated is purely in-memory so different people on same browser start fresh
-function vKey(){ return 'fp6v_'+(S.code||''); }
+// Each time a user enters a session, a fresh instanceId is generated.
+// voted is scoped to instanceId so a new entry = clean slate for upvotes too.
+function vKey(){ return 'fp6v_'+S.instanceId; }
 function loadLS(){
-  try{ S.voted=new Set(JSON.parse(localStorage.getItem(vKey())||'[]')); }catch(e){}
+  // Don't load old votes — each entry is independent
+  S.voted=new Set();
 }
 function saveLS(){
   try{ localStorage.setItem(vKey(),JSON.stringify([...S.voted])); }catch(e){}
@@ -845,7 +855,7 @@ async function lookupCode(pre){
     const s=await dG('sessions/'+code);
     if(!s){toast('Session not found','er');return;}
     if(!s.open){toast('This session is closed','er');return;}
-    S.sess=s; S.code=code; S.rated={}; loadLS(); // reset ratings for new session entry
+    S.sess=s; S.code=code; S.rated={}; // instanceId & voted reset in enterSession()
     document.getElementById('js-sn').textContent=s.name;
     document.getElementById('js-sd').textContent=s.desc||'';
     const lbl=document.getElementById('js-name-lbl');
@@ -861,6 +871,10 @@ function enterSession(){
   const nameVal=document.getElementById('js-name').value.trim().slice(0,40);
   if(s.nameReq&&!nameVal)return toast('Please enter your name','er');
   S.who=nameVal||null;
+  // Fresh instanceId for this entry — each join is fully independent
+  S.instanceId=uid();
+  S.rated={};
+  S.voted=new Set();
   document.getElementById('fb-sn').textContent=s.name;
   document.getElementById('fb-sd').textContent=s.desc||'';
   document.getElementById('fb-who').textContent='👤 '+(S.who||'Anonymous');
@@ -942,12 +956,29 @@ function ratingH(q,s,adminView){
     statusHtml=`<div class="r-status" style="color:var(--md)">Session closed</div>`;
   }
 
+  // Results: always show for adminView; for participants show if public
+  const R=s.ratings?.[q.id]||{1:0,2:0,3:0,4:0,5:0};
+  const total=Object.values(R).reduce((a,n)=>a+Number(n),0);
+  const avg=total?(Object.entries(R).reduce((a,[k,v])=>a+k*v,0)/total).toFixed(1):null;
+  const bars=total?[1,2,3,4,5].map(n=>{
+    const cnt=Number(R[n]||0),pct=Math.round(cnt/total*100);
+    return`<div class="rb-l">${EM[n]} <span style="font-size:11px;color:var(--md)">${n}</span></div>
+      <div class="rb-tr"><div class="rb-fi" style="width:${pct}%"></div></div>
+      <div class="rb-c">${cnt}</div>`;
+  }).join(''):'';
+
+  const showResults=adminView&&total>0;
+
   return`<div class="rbox">
     <div class="rbox-ttl">${esc(q.text)}</div>
     <div class="rbox-sub">Rate from 😞 (1 = very poor) to 😍 (5 = excellent)</div>
     <div class="rcards">${cards}</div>
     <div class="rc-lbl"><span>😞 Very Poor</span><span>Excellent 😍</span></div>
     ${statusHtml}
+    ${showResults?`<div class="r-sep"></div>
+      <div class="r-res-ttl">Results · ${total} response${total!==1?'s':''}</div>
+      <div class="rbars">${bars}</div>
+      <div class="r-avg"><div class="r-avg-n">${avg}</div><div class="r-avg-s">/ 5 average</div></div>`:''}
   </div>`;
 }
 
