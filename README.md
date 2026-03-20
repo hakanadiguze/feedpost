@@ -1,62 +1,37 @@
 # FeedPost 📌
+**Built by Hakan** — Real-time visual feedback platform
 
-A real-time visual feedback platform where participants stick post-it notes to share thoughts.
+## Setup (Required: Firebase Realtime Database)
 
-**Built by Hakan**
+### Step 1 — Enable Realtime Database
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project (`feed-post-30aa9`)
+3. Left sidebar → **Build** → **Realtime Database**
+4. Click **Create Database**
+5. Choose a region (e.g. `europe-west1`)
+6. Select **Start in test mode** → Enable
+
+> **This is why "session not found" error appears** — the app uses Realtime Database for cross-device sync. Without it, nothing is stored in the cloud.
+
+### Step 2 — Deploy to Vercel / GitHub Pages
+Upload `index.html` to your repo. That's it — Firebase config is already embedded.
+
+---
 
 ## Features
+- 📌 **Post-it board** — double-click to create, click to edit
+- 😞😕😐😊😍 **Emoji rating scale** — 1–5 with live bar chart
+- 🔴 **Real-time sync** — Firebase pushes updates to all devices instantly
+- 🔗 **Share by code or URL** — `?join=CODE` links work from any device
+- 👍 **Upvoting** — in public sessions
+- 🔐 **Admin accounts** — persistent, cloud-stored sessions
+- ⏱️ **Sessions stay open indefinitely** — until admin closes them (1 week, 1 month — no problem)
 
-- 🟠 **Post-it board** — participants double-click to create sticky notes, click to edit
-- ⭐ **Rated questions** — 1–5 number selector with live bar chart results
-- 🔴 **Real-time sync** — new post-its and ratings appear for everyone within ~1.5s
-- 🔗 **Share by code or link** — 4-letter join code + auto-generated URL
-- 👍 **Upvoting** — in public sessions, users can upvote post-its
-- 🔐 **Admin accounts** — username/password login, persistent session history
-- 🌐 **Public / Private** — admin controls whether feedback is visible to all
-- 👤 **Anonymous or named** — admin can require names or allow anonymous posts
-- ❓ **How-to guide** — built-in help panel on every screen
+## Why admins can't post directly from the admin panel
+The admin detail view is read-only (for oversight). To participate:
+1. Copy the session link from the detail page
+2. Open it in a **new browser tab**
+3. Join as a participant — you can post, rate, and upvote
 
-## Question Types
-
-| Type | How participants respond |
-|------|------------------------|
-| **Text question** | Creates a post-it note with free text |
-| **Rated question** | Clicks a number 1–5; results shown as bar chart |
-| *(no questions)* | Free-form general feedback board |
-
-## Usage
-
-### As Admin
-1. Open `index.html` in a browser
-2. Click **Admin Login** → create an account
-3. Click **+ New Session** → configure options and add questions
-4. Share the generated **code** or **link** with participants
-5. Watch feedback arrive live in the session detail view
-6. Click **Close Session** when done
-
-### As Participant
-1. Open the shared link directly, **or**
-2. Click **Join a Session** and enter the 4-letter code
-3. Enter your name (if required) and click **Enter Session**
-4. For text questions: **double-click** the board or click **+** to add a post-it
-5. For rated questions: click a number (1–5) then **Submit Rating**
-6. Click any existing post-it to **edit** it
-
-## Technical Notes
-
-- **Single HTML file** — no build step, no server required
-- **Persistence** — uses `localStorage` to store all data
-- **Real-time** — polls `localStorage` every 1.5s (works across browser tabs on the same machine; for multi-device real-time, a backend is needed)
-- **No dependencies** — pure HTML/CSS/JavaScript
-
-## GitHub Pages Deployment
-
-1. Upload `index.html` to a GitHub repository
-2. Go to **Settings → Pages → Source** and select `main` branch
-3. Your app will be live at `https://yourusername.github.io/repo-name/`
-
-> **Note:** Because the app uses `localStorage` for storage, data is stored per-browser. For a true multi-device real-time experience, you would need a backend (e.g. Firebase, Supabase, or a custom server).
-
-## License
-
-MIT — free to use, modify, and distribute.
+## Session Lifetime
+Sessions **never expire automatically**. They stay open until the admin clicks **Close Session**. Participants can add feedback days or weeks after creation.
