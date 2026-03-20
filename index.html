@@ -388,16 +388,16 @@ textarea.fc{resize:vertical;min-height:80px}
     <div class="auth-tt">Admin Login</div>
     <div class="auth-sb">Sign in or create an account</div>
     <div id="f-li">
-      <div class="fg"><label class="fl">Username</label><input id="li-u" class="fc" type="text" placeholder="your_username" autocomplete="username"></div>
-      <div class="fg"><label class="fl">Password</label><input id="li-p" class="fc" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="fg"><label class="fl">Username</label><input id="li-u" class="fc" type="text" placeholder="your_username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('li-p').focus()"></div>
+      <div class="fg"><label class="fl">Password</label><input id="li-p" class="fc" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
       <button class="btn b-or b-lg" style="width:100%" id="btn-li" onclick="adminLogin()">Sign In</button>
       <div class="divider"></div>
       <p class="tsm tmd" style="text-align:center">No account? <button class="btn b-out b-sm" style="margin-left:8px" onclick="showReg(true)">Register</button></p>
     </div>
     <div id="f-rg" style="display:none">
-      <div class="fg"><label class="fl">Username</label><input id="rg-u" class="fc" type="text" placeholder="choose_username"></div>
-      <div class="fg"><label class="fl">Password</label><input id="rg-p" class="fc" type="password" placeholder="••••••••"></div>
-      <div class="fg"><label class="fl">Confirm Password</label><input id="rg-p2" class="fc" type="password" placeholder="••••••••"></div>
+      <div class="fg"><label class="fl">Username</label><input id="rg-u" class="fc" type="text" placeholder="choose_username" onkeydown="if(event.key==='Enter')document.getElementById('rg-p').focus()"></div>
+      <div class="fg"><label class="fl">Password</label><input id="rg-p" class="fc" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')document.getElementById('rg-p2').focus()"></div>
+      <div class="fg"><label class="fl">Confirm Password</label><input id="rg-p2" class="fc" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminReg()"></div>
       <button class="btn b-tl b-lg" style="width:100%" id="btn-rg" onclick="adminReg()">Create Account</button>
       <div class="divider"></div>
       <p class="tsm tmd" style="text-align:center">Have one? <button class="btn b-out b-sm" style="margin-left:8px" onclick="showReg(false)">Sign In</button></p>
@@ -475,15 +475,14 @@ textarea.fc{resize:vertical;min-height:80px}
       <div class="jbdg">🔑 Enter Code</div>
       <div class="jttl">Join a Session</div>
       <div class="jsub">Type the 4-letter code your admin shared</div>
-      <div class="fg"><input id="jn-code" class="fc" type="text" maxlength="4" placeholder="XXXX" style="font-size:26px;letter-spacing:8px;text-align:center;font-weight:800;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg"><input id="jn-code" class="fc" type="text" maxlength="4" placeholder="XXXX" style="font-size:26px;letter-spacing:8px;text-align:center;font-weight:800;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')lookupCode()"></div>
       <button class="btn b-or b-lg" style="width:100%" id="btn-lu" onclick="lookupCode()">Look Up →</button>
     </div>
     <div id="js-s2" style="display:none">
       <div class="jbdg">🟢 Active Session</div>
       <div class="jttl" id="js-sn"></div>
       <div class="jsub" id="js-sd"></div>
-      <div id="js-nfg" class="fg" style="display:none"><label class="fl">Your Name *</label><input id="js-name" class="fc" type="text" placeholder="Enter your name"></div>
-      <div id="js-anon" class="bdg bgy" style="margin-bottom:16px;display:none">👤 You may join anonymously</div>
+      <div id="js-nfg" class="fg"><label class="fl" id="js-name-lbl">Your Name (optional)</label><input id="js-name" class="fc" type="text" placeholder="Enter your name or leave blank" maxlength="40" onkeydown="if(event.key==='Enter')enterSession()"></div>
       <div style="display:flex;gap:9px">
         <button class="btn b-gh" style="color:var(--md);border:2px solid rgba(26,26,46,.12);flex:1" onclick="resetJoin()">← Back</button>
         <button class="btn b-or b-lg" style="flex:2" onclick="enterSession()">Enter Session →</button>
@@ -521,7 +520,7 @@ textarea.fc{resize:vertical;min-height:80px}
   <div class="mbox">
     <div class="mttl">Join a Session</div>
     <div class="msub">Enter the 4-letter code from your admin</div>
-    <div class="fg"><input id="m-code" class="fc" type="text" maxlength="4" placeholder="XXXX" style="font-size:26px;letter-spacing:8px;text-align:center;font-weight:800;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="fg"><input id="m-code" class="fc" type="text" maxlength="4" placeholder="XXXX" style="font-size:26px;letter-spacing:8px;text-align:center;font-weight:800;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')joinFromModal()"></div>
     <div class="mft"><button class="btn b-gh" style="color:var(--md);border:2px solid rgba(26,26,46,.12)" onclick="closeM('m-join')">Cancel</button><button class="btn b-or" onclick="joinFromModal()">Continue →</button></div>
   </div>
 </div>
@@ -531,7 +530,7 @@ textarea.fc{resize:vertical;min-height:80px}
   <div class="mbox">
     <div class="mttl" id="aq-ttl">Add Question</div>
     <div class="msub" id="aq-sub"></div>
-    <div class="fg"><label class="fl">Question Text *</label><input id="aq-txt" class="fc" type="text" placeholder="Type your question…"></div>
+    <div class="fg"><label class="fl">Question Text *</label><input id="aq-txt" class="fc" type="text" placeholder="Type your question…" onkeydown="if(event.key==='Enter')confirmQ()"></div>
     <div class="mft"><button class="btn b-gh" style="color:var(--md);border:2px solid rgba(26,26,46,.12)" onclick="closeM('m-addq')">Cancel</button><button class="btn b-or" onclick="confirmQ()">Add</button></div>
   </div>
 </div>
@@ -543,31 +542,44 @@ textarea.fc{resize:vertical;min-height:80px}
 // FIREBASE WRAPPERS
 // ═══════════════════════════════════════════════════
 const F = () => window._FP;
-const dbR = p  => F().ref(F().db, p);
-const dbG = async p       => (await F().get(dbR(p))).val();
-const dbS = async (p,v)   => F().set(dbR(p), v);
-const dbP = async (p,v)   => F().push(dbR(p), v);
-const dbU = async (p,v)   => F().update(dbR(p), v);
-const dbOn  = (p,cb) => { const r=dbR(p); F().onValue(r, s=>cb(s.val())); return r; };
+const dbR = p        => F().ref(F().db, p);
+const dbG = async p  => (await F().get(dbR(p))).val();
+const dbS = async(p,v) => F().set(dbR(p),v);
+const dbP = async(p,v) => F().push(dbR(p),v);
+const dbU = async(p,v) => F().update(dbR(p),v);
+const dbOn  = (p,cb) => { const r=dbR(p); F().onValue(r,s=>cb(s.val())); return r; };
 const dbOff = r      => { if(r) F().off(r); };
 
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
 const S = {
-  admin: null,       // logged-in username
-  sess:  null,       // current session snapshot
-  code:  null,       // current session code
-  who:   null,       // participant name or null
-  pendQs: [],
-  pendQT: null,
-  voted:  new Set(), // fbIds upvoted (localStorage)
-  rated:  new Set(), // qIds rated   (localStorage)
-  liveRef: null,
+  admin:null, sess:null, code:null, who:null,
+  pendQs:[], pendQT:null,
+  liveRef:null,
+  // Per-device voted/rated stored in localStorage
+  voted: new Set(),
+  rated: new Set(),
 };
 
-function loadV(){try{S.voted=new Set(JSON.parse(localStorage.getItem('fp4v')||'[]'));S.rated=new Set(JSON.parse(localStorage.getItem('fp4r')||'[]'));}catch(e){}}
-function saveV(){try{localStorage.setItem('fp4v',JSON.stringify([...S.voted]));localStorage.setItem('fp4r',JSON.stringify([...S.rated]));}catch(e){}}
+// voted = Set of fbId strings (can be +/- toggled)
+// rated = Set of qId strings (one-time per device per session)
+// We store as "code:qid" to scope per session
+
+function vKey(){ return 'fp5v_'+(S.code||''); }
+function rKey(){ return 'fp5r_'+(S.code||''); }
+function loadV(){
+  try{
+    S.voted=new Set(JSON.parse(localStorage.getItem(vKey())||'[]'));
+    S.rated=new Set(JSON.parse(localStorage.getItem(rKey())||'[]'));
+  }catch(e){}
+}
+function saveV(){
+  try{
+    localStorage.setItem(vKey(),JSON.stringify([...S.voted]));
+    localStorage.setItem(rKey(),JSON.stringify([...S.rated]));
+  }catch(e){}
+}
 
 // ═══════════════════════════════════════════════════
 // UTILS
@@ -594,7 +606,6 @@ function sUrl(c){return location.origin+location.pathname+'?join='+c;}
 function toArr(o){if(!o)return[];if(Array.isArray(o))return o;return Object.values(o);}
 function countFb(s){if(!s.feedbacks)return 0;return Object.values(s.feedbacks).reduce((a,v)=>a+(Array.isArray(v)?v.length:Object.keys(v||{}).length),0);}
 function setBtn(id,loading,txt){const b=document.getElementById(id);if(!b)return;b.disabled=loading;b.innerHTML=loading?'<div class="spin"></div>':txt;}
-
 function toggleHtu(){const b=document.getElementById('htu-btn'),bd=document.getElementById('htu-bd');b.classList.toggle('op');bd.style.display=b.classList.contains('op')?'block':'none';}
 function hTab(i,el){document.querySelectorAll('.htu-tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.htu-pane').forEach(p=>p.classList.remove('on'));el.classList.add('on');document.getElementById('ht'+i).classList.add('on');}
 function toggleH(id){const p=document.getElementById(id),w=p.classList.contains('on');document.querySelectorAll('.hpanel').forEach(x=>x.classList.remove('on'));if(!w)p.classList.add('on');}
@@ -605,8 +616,8 @@ function toggleH(id){const p=document.getElementById(id),w=p.classList.contains(
 function showReg(s){document.getElementById('f-li').style.display=s?'none':'block';document.getElementById('f-rg').style.display=s?'block':'none';}
 
 async function adminLogin(){
-  if(!F()?.ok)return toast('Firebase not connected — check Realtime Database setup','er');
-  const u=document.getElementById('li-u').value.trim(), p=document.getElementById('li-p').value;
+  if(!F()?.ok)return toast('Firebase not connected','er');
+  const u=document.getElementById('li-u').value.trim(),p=document.getElementById('li-p').value;
   if(!u||!p)return toast('Enter username and password','er');
   setBtn('btn-li',true,'');
   try{
@@ -620,8 +631,8 @@ async function adminLogin(){
 }
 
 async function adminReg(){
-  if(!F()?.ok)return toast('Firebase not connected — check Realtime Database setup','er');
-  const u=document.getElementById('rg-u').value.trim(), p=document.getElementById('rg-p').value, p2=document.getElementById('rg-p2').value;
+  if(!F()?.ok)return toast('Firebase not connected','er');
+  const u=document.getElementById('rg-u').value.trim(),p=document.getElementById('rg-p').value,p2=document.getElementById('rg-p2').value;
   if(!u||!p)return toast('Fill all fields','er');
   if(p!==p2)return toast("Passwords don't match",'er');
   setBtn('btn-rg',true,'');
@@ -637,12 +648,13 @@ async function adminReg(){
 function adminLogout(){S.admin=null;S.sess=null;stopLive();go('home');}
 
 // ═══════════════════════════════════════════════════
-// ADMIN — LIST
+// ADMIN — SESSION LIST
 // ═══════════════════════════════════════════════════
 async function showList(){
   document.getElementById('v-list').style.display='block';
   document.getElementById('v-create').style.display='none';
   document.getElementById('v-detail').style.display='none';
+  stopLive();
   await renderGrid();
 }
 
@@ -665,15 +677,18 @@ async function renderGrid(){
         </div></div>
         <div class="sc-f">
           <button class="btn b-tl b-sm" onclick="viewDetail('${s.code}')">View</button>
-          ${s.open?`<button class="btn b-rd b-sm" onclick="closeSessionDB('${s.code}')">Close</button>`:''}
+          ${s.open
+            ?`<button class="btn b-rd b-sm" onclick="closeSessionDB('${s.code}')">Close</button>`
+            :`<button class="btn b-or b-sm" onclick="reopenSession('${s.code}')">Reopen</button>`}
           <button class="btn b-dk b-sm" onclick="cpLink('${s.code}')">Copy Link</button>
+          <button class="btn b-sm" style="background:#FFE8EA;color:#FF4757" onclick="deleteSession('${s.code}')">Delete</button>
         </div>
       </div>`).join('');
   }catch(e){g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-tt">Error</div><div class="tsm tmd">'+esc(e.message)+'</div></div>';}
 }
 
 // ═══════════════════════════════════════════════════
-// ADMIN — CREATE
+// ADMIN — CREATE SESSION
 // ═══════════════════════════════════════════════════
 function showCreate(){
   S.pendQs=[];
@@ -686,6 +701,7 @@ function showCreate(){
   document.getElementById('v-create').style.display='block';
   document.getElementById('v-detail').style.display='none';
 }
+
 function addQ(t){
   S.pendQT=t;
   document.getElementById('aq-ttl').textContent=t==='rating'?'Add Rated Question':'Add Text Question';
@@ -694,12 +710,14 @@ function addQ(t){
   openM('m-addq');
   setTimeout(()=>document.getElementById('aq-txt').focus(),80);
 }
+
 function confirmQ(){
   const t=document.getElementById('aq-txt').value.trim();
   if(!t)return toast('Enter question text','er');
   S.pendQs.push({id:uid(),text:t,type:S.pendQT});
   closeM('m-addq'); renderQB();
 }
+
 function renderQB(){
   const el=document.getElementById('q-build');
   if(!S.pendQs.length){el.style.display='none';return;}
@@ -710,6 +728,7 @@ function renderQB(){
       <button class="btn b-rd b-sm" onclick="rmQ(${i})">Remove</button>
     </div>`).join('');
 }
+
 function rmQ(i){S.pendQs.splice(i,1);renderQB();}
 
 async function createSession(){
@@ -719,21 +738,21 @@ async function createSession(){
   try{
     let code; do{code=genCode();}while(await dbG('sessions/'+code));
     const sess={
-      code, name,
+      code,name,
       desc:document.getElementById('cs-desc').value.trim(),
-      isPublic: document.getElementById('tg-pub').classList.contains('on'),
-      nameReq:  document.getElementById('tg-name').classList.contains('on'),
-      questions: S.pendQs,
-      feedbacks: {}, ratings: {},
-      open: true, createdAt: Date.now(), owner: S.admin
+      isPublic:document.getElementById('tg-pub').classList.contains('on'),
+      nameReq:document.getElementById('tg-name').classList.contains('on'),
+      questions:S.pendQs,
+      feedbacks:{},ratings:{},
+      open:true,createdAt:Date.now(),owner:S.admin
     };
     if(!sess.questions.length) sess.feedbacks['general']={};
     else sess.questions.forEach(q=>{
       if(q.type==='text')   sess.feedbacks[q.id]={};
       if(q.type==='rating') sess.ratings[q.id]={1:0,2:0,3:0,4:0,5:0};
     });
-    await dbS('sessions/'+code, sess);
-    await dbP('admins/'+S.admin+'/sessions', code);
+    await dbS('sessions/'+code,sess);
+    await dbP('admins/'+S.admin+'/sessions',code);
     toast('Session created! Code: '+code);
     viewDetail(code);
   }catch(e){toast('Error: '+e.message,'er');}
@@ -741,21 +760,25 @@ async function createSession(){
 }
 
 // ═══════════════════════════════════════════════════
-// ADMIN — DETAIL
+// ADMIN — SESSION DETAIL
 // ═══════════════════════════════════════════════════
 async function viewDetail(code){
   document.getElementById('v-list').style.display='none';
   document.getElementById('v-create').style.display='none';
   document.getElementById('v-detail').style.display='block';
   document.getElementById('dt-board').innerHTML='<div class="empty"><div class="empty-ic">⏳</div></div>';
-
   const s=await dbG('sessions/'+code);
   if(!s)return toast('Session not found','er');
   S.sess=s; S.code=code;
+  renderDetailMeta(s);
+  document.getElementById('dt-board').innerHTML=buildBoard(s,true);
+  startLive(code);
+}
 
+function renderDetailMeta(s){
+  const code=s.code;
   document.getElementById('dt-name').textContent=s.name;
   document.getElementById('dt-meta').textContent=`Created ${fmt(s.createdAt)} · ${s.isPublic?'Public':'Private'} · Name ${s.nameReq?'required':'optional'}`;
-
   const url=sUrl(code);
   document.getElementById('dt-links').innerHTML=`
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
@@ -765,16 +788,20 @@ async function viewDetail(code){
         <div class="link-box"><span class="link-url">${esc(url)}</span><button class="btn b-dk b-sm" onclick="cpLink('${code}')">Copy</button></div>
       </div>
     </div>`;
-
+  const n=countFb(s);
+  document.getElementById('dt-stats').innerHTML=`<div class="card" style="padding:18px 22px;display:inline-flex;gap:28px;flex-wrap:wrap">
+    <div><div class="sv">${n}</div><div class="sl">Feedbacks</div></div>
+    <div><div class="sv">${(s.questions||[]).length}</div><div class="sl">Questions</div></div>
+    <div><div class="sv" style="color:${s.open?'var(--tl)':'#aaa'}">${s.open?'Open':'Closed'}</div><div class="sl">Status</div></div>
+  </div>`;
   document.getElementById('dt-ctrl').innerHTML=s.open
     ?`<button class="btn b-rd" onclick="closeSessionDB('${code}')">🔴 Close Session</button>
       <button class="btn b-out" onclick="cpLink('${code}')">📋 Copy Link</button>
       <span class="tsm tmd" style="align-self:center">To participate: open the link in a new tab</span>`
     :`<span class="bdg brd" style="padding:9px 16px;font-size:13px">Session closed</span>
-      <button class="btn b-out" onclick="cpLink('${code}')">📋 Copy Link</button>`;
-
-  document.getElementById('dt-board').innerHTML=buildBoard(s, true);
-  startLive(code);
+      <button class="btn b-or b-sm" onclick="reopenSession('${code}')">🟢 Reopen Session</button>
+      <button class="btn b-out" onclick="cpLink('${code}')">📋 Copy Link</button>
+      <button class="btn b-tl b-sm" onclick="downloadPDF('${code}')">⬇️ Download PDF</button>`;
 }
 
 async function closeSessionDB(code){
@@ -783,25 +810,118 @@ async function closeSessionDB(code){
   await renderGrid();
   if(S.code===code) viewDetail(code);
 }
+
+async function reopenSession(code){
+  await dbU('sessions/'+code,{open:true});
+  toast('Session reopened! 🟢');
+  await renderGrid();
+  if(S.code===code) viewDetail(code);
+}
+
+async function deleteSession(code){
+  if(!confirm('Delete this session and all its feedback? This cannot be undone.'))return;
+  try{
+    await dbS('sessions/'+code,null);
+    // Remove from admin's list
+    const codes=await dbG('admins/'+S.admin+'/sessions')||{};
+    const entry=Object.entries(codes).find(([k,v])=>v===code);
+    if(entry) await dbS('admins/'+S.admin+'/sessions/'+entry[0],null);
+    toast('Session deleted');
+    await renderGrid();
+  }catch(e){toast('Error: '+e.message,'er');}
+}
+
 function cpLink(c){navigator.clipboard?.writeText(sUrl(c)).catch(()=>{});toast('Link copied!');}
 function cpStr(s){navigator.clipboard?.writeText(s).catch(()=>{});toast('Copied: '+s);}
+
+// ═══════════════════════════════════════════════════
+// PDF EXPORT
+// ═══════════════════════════════════════════════════
+async function downloadPDF(code){
+  const s=await dbG('sessions/'+code);
+  if(!s)return toast('Session not found','er');
+  toast('Preparing PDF…');
+  // Build HTML content for PDF
+  let html='<html><head><meta charset="UTF-8"><style>';
+  html+=`body{font-family:Arial,sans-serif;padding:32px;color:#1A1A2E;max-width:800px;margin:0 auto}
+    h1{color:#FF6B35;font-size:24px;margin-bottom:4px}
+    .meta{color:#888;font-size:13px;margin-bottom:24px}
+    h2{color:#1A1A2E;font-size:16px;margin:24px 0 12px;padding-bottom:6px;border-bottom:2px solid #FF6B35}
+    .postit{display:inline-block;background:#FFF176;padding:12px 14px;border-radius:4px;margin:6px;font-size:13px;box-shadow:2px 2px 6px rgba(0,0,0,.15);max-width:200px;vertical-align:top}
+    .pi-author{font-size:10px;font-weight:bold;color:#666;text-transform:uppercase;margin-bottom:6px}
+    .pi-votes{font-size:11px;color:#FF6B35;margin-top:8px;font-weight:bold}
+    .rating-bar{margin:8px 0;display:flex;align-items:center;gap:10px}
+    .bar-label{width:60px;font-size:13px}
+    .bar-track{flex:1;height:16px;background:#eee;border-radius:8px;overflow:hidden}
+    .bar-fill{height:100%;background:#FF6B35;border-radius:8px}
+    .bar-count{font-size:12px;color:#666;width:30px}
+    .avg{font-size:20px;font-weight:bold;color:#1A1A2E;margin-top:12px}
+    .no-fb{color:#aaa;font-style:italic;font-size:13px}
+    @media print{body{padding:16px}}`;
+  html+='</style></head><body>';
+  html+=`<h1>${esc(s.name)}</h1>`;
+  html+=`<div class="meta">Created ${fmt(s.createdAt)} · ${s.isPublic?'Public':'Private'} · ${countFb(s)} feedbacks</div>`;
+
+  const EM={1:'😞',2:'😕',3:'😐',4:'😊',5:'😍'};
+  const colors=['#FFF176','#FFCC80','#B2EDE8','#F8BBD9','#BBDEFB','#C8E6C9','#E1BEE7','#F0F4C3'];
+
+  if(!s.questions||!s.questions.length){
+    html+=`<h2>💬 General Feedback</h2>`;
+    const items=toArr(s.feedbacks?.general);
+    if(!items.length) html+='<div class="no-fb">No feedback yet</div>';
+    else items.forEach((fb,i)=>{
+      const c=colors[i%colors.length];
+      html+=`<div class="postit" style="background:${c}"><div class="pi-author">${fb.author?esc(fb.author):'Anonymous'}</div>${esc(fb.text)}<div class="pi-votes">+${fb.upvotes||0} votes</div></div>`;
+    });
+  } else {
+    s.questions.forEach((q,qi)=>{
+      html+=`<h2>${qi+1}. ${esc(q.text)}</h2>`;
+      if(q.type==='text'){
+        const items=toArr(s.feedbacks?.[q.id]);
+        if(!items.length) html+='<div class="no-fb">No feedback yet</div>';
+        else items.forEach((fb,i)=>{
+          const c=colors[i%colors.length];
+          html+=`<div class="postit" style="background:${c}"><div class="pi-author">${fb.author?esc(fb.author):'Anonymous'}</div>${esc(fb.text)}<div class="pi-votes">+${fb.upvotes||0} votes</div></div>`;
+        });
+      } else {
+        const R=s.ratings?.[q.id]||{1:0,2:0,3:0,4:0,5:0};
+        const total=Object.values(R).reduce((a,n)=>a+Number(n),0);
+        const avg=total?(Object.entries(R).reduce((a,[k,v])=>a+k*v,0)/total).toFixed(1):null;
+        if(!total){html+='<div class="no-fb">No ratings yet</div>';}
+        else{
+          [1,2,3,4,5].forEach(n=>{
+            const cnt=Number(R[n]||0);
+            const pct=total?Math.round(cnt/total*100):0;
+            html+=`<div class="rating-bar"><div class="bar-label">${EM[n]} ${n}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-count">${cnt}</div></div>`;
+          });
+          html+=`<div class="avg">${avg} / 5 average <span style="font-size:14px;color:#888">— ${total} response${total!==1?'s':''}</span></div>`;
+        }
+      }
+    });
+  }
+  html+='</body></html>';
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`feedpost-${s.code}-${s.name.replace(/[^a-z0-9]/gi,'-').toLowerCase()}.html`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Downloaded! Open in browser and print → Save as PDF');
+}
 
 // ═══════════════════════════════════════════════════
 // LIVE LISTENER
 // ═══════════════════════════════════════════════════
 function startLive(code){
   stopLive();
-  S.liveRef=dbOn('sessions/'+code, data=>{
+  S.liveRef=dbOn('sessions/'+code,data=>{
     if(!data)return;
     S.sess=data;
-    // Update participant board
     if(document.getElementById('fb-screen').classList.contains('on'))
       renderBoard(data);
-    // Update admin detail board
-    if(document.getElementById('v-detail').style.display!=='none' && S.code===code){
-      document.getElementById('dt-board').innerHTML=buildBoard(data, true);
-      const n=countFb(data);
-      document.getElementById('dt-stats').innerHTML=`<div class="card" style="padding:18px 22px;display:inline-flex;gap:28px;flex-wrap:wrap"><div><div class="sv">${n}</div><div class="sl">Feedbacks</div></div><div><div class="sv">${(data.questions||[]).length}</div><div class="sl">Questions</div></div><div><div class="sv" style="color:${data.open?'var(--tl)':'#aaa'}">${data.open?'Open':'Closed'}</div><div class="sl">Status</div></div></div>`;
+    if(document.getElementById('v-detail').style.display!=='none'&&S.code===code){
+      document.getElementById('dt-board').innerHTML=buildBoard(data,true);
+      renderDetailMeta(data);
     }
   });
 }
@@ -817,6 +937,8 @@ function joinFromModal(){
   closeM('m-join'); goJoinScreen(c);
 }
 function goJoinScreen(code){
+  // Stop any existing live listener first (prevents reload loop)
+  stopLive();
   go('join-screen');
   document.getElementById('js-s1').style.display='block';
   document.getElementById('js-s2').style.display='none';
@@ -832,16 +954,14 @@ async function lookupCode(pre){
     if(!s){toast('Session not found','er');return;}
     if(!s.open){toast('This session is closed','er');return;}
     S.sess=s; S.code=code;
+    // Load per-session voted/rated from localStorage
+    loadV();
     document.getElementById('js-sn').textContent=s.name;
     document.getElementById('js-sd').textContent=s.desc||'';
-    if(s.nameReq){
-      document.getElementById('js-nfg').style.display='block';
-      document.getElementById('js-anon').style.display='none';
-      document.getElementById('js-name').value='';
-    } else {
-      document.getElementById('js-nfg').style.display='none';
-      document.getElementById('js-anon').style.display='inline-flex';
-    }
+    // Always show name field; label changes based on requirement
+    const lbl=document.getElementById('js-name-lbl');
+    if(lbl) lbl.textContent=s.nameReq?'Your Name *':'Your Name (optional)';
+    document.getElementById('js-nfg').style.display='block';
     document.getElementById('js-s1').style.display='none';
     document.getElementById('js-s2').style.display='block';
   }catch(e){toast('Error: '+e.message,'er');}
@@ -850,8 +970,9 @@ async function lookupCode(pre){
 function resetJoin(){document.getElementById('js-s1').style.display='block';document.getElementById('js-s2').style.display='none';}
 function enterSession(){
   const s=S.sess;
-  if(s.nameReq){const n=document.getElementById('js-name').value.trim();if(!n)return toast('Please enter your name','er');S.who=n;}
-  else S.who=null;
+  const nameVal=document.getElementById('js-name').value.trim().slice(0,40);
+  if(s.nameReq&&!nameVal)return toast('Please enter your name','er');
+  S.who=nameVal||null;
   document.getElementById('fb-sn').textContent=s.name;
   document.getElementById('fb-sd').textContent=s.desc||'';
   document.getElementById('fb-who').textContent='👤 '+(S.who||'Anonymous');
@@ -861,28 +982,36 @@ function enterSession(){
 }
 
 // ═══════════════════════════════════════════════════
-// BOARD HTML
+// BOARD HTML BUILDER
 // ═══════════════════════════════════════════════════
-function buildBoard(s, adminView){
+function buildBoard(s,adminView){
   if(!s.questions||!s.questions.length){
     const items=toArr(s.feedbacks?.general);
-    return `<div class="q-sec">${qHd('💬 General Feedback',null,'general',items.length,false,adminView,s)}${zoneH('general',items,adminView,s)}</div>`;
+    // Private + participant: only show own posts
+    const visItems=filterVisible(items,adminView,s);
+    return`<div class="q-sec">${qHd('💬 General Feedback',null,'general',items.length,false,adminView,s)}${zoneH('general',visItems,adminView,s)}</div>`;
   }
   return s.questions.map((q,i)=>{
     if(q.type==='text'){
       const items=toArr(s.feedbacks?.[q.id]);
-      return`<div class="q-sec">${qHd(q.text,i+1,q.id,items.length,false,adminView,s)}${zoneH(q.id,items,adminView,s)}</div>`;
+      const visItems=filterVisible(items,adminView,s);
+      return`<div class="q-sec">${qHd(q.text,i+1,q.id,items.length,false,adminView,s)}${zoneH(q.id,visItems,adminView,s)}</div>`;
     } else {
       return`<div class="q-sec">${ratingH(q,s,adminView)}</div>`;
     }
   }).join('');
 }
 
+// Private sessions: participants only see their own posts
+function filterVisible(items,adminView,s){
+  if(adminView||s.isPublic)return items;
+  // Private: show only this participant's own posts
+  if(!S.who&&!S.admin) return items.filter(fb=>!fb.author);
+  return items.filter(fb=>fb.author===S.who||(S.admin&&fb.author===null));
+}
+
 function qHd(title,num,qid,cnt,isR,adminView,s){
   const nEl=num?`<div class="q-num">${num}</div>`:'';
-  // IMPORTANT: participants AND admins who visit via link can add post-its
-  // adminView=true only means viewing via admin detail panel — they can still see but not add inline
-  // We allow adding from the participant board only (fb-screen)
   const addBtn=!adminView&&s.open&&!isR?`<button class="add-btn" onclick="spawnNew('${qid}')">+ Add</button>`:'';
   return`<div class="q-hd">${nEl}<div class="q-ttl">${esc(title)}</div>${addBtn}<span class="bdg bor">${cnt}</span></div>`;
 }
@@ -904,8 +1033,9 @@ function ratingH(q,s,adminView){
   const R=s.ratings?.[q.id]||{1:0,2:0,3:0,4:0,5:0};
   const total=Object.values(R).reduce((a,n)=>a+Number(n),0);
   const avg=total?(Object.entries(R).reduce((a,[k,v])=>a+k*v,0)/total).toFixed(1):null;
-  const done=S.rated.has(q.id);
-  // canRate = participant view + session open + not already voted
+  // Per-session rating: use session-scoped key
+  const ratedKey=q.id;
+  const done=S.rated.has(ratedKey);
   const canRate=!adminView&&s.open&&!done;
   const cur=selR[q.id];
 
@@ -923,30 +1053,28 @@ function ratingH(q,s,adminView){
 
   return`<div class="rbox">
     <div class="rbox-ttl">${esc(q.text)}</div>
-    <div class="rbox-sub">Rate this from 😞 (1 = very poor) to 😍 (5 = excellent). Click an emoji to select.</div>
+    <div class="rbox-sub">Rate from 😞 (1 = very poor) to 😍 (5 = excellent). Click an emoji to select.</div>
     <div class="rcards">${cards}</div>
     <div class="rc-lbl"><span>😞 Very Poor</span><span>Excellent 😍</span></div>
-    ${canRate?`
-      <div class="r-sub-row">
+    ${canRate?`<div class="r-sub-row">
         <button class="btn b-or b-sm" onclick="submitRating('${q.id}')">Submit Rating</button>
         <span class="r-sel-txt" id="rsd-${q.id}">${cur?`Selected: <strong>${EM[cur]} ${cur} — ${LB[cur]}</strong>`:'No selection yet'}</span>
       </div>`
-    : done?`<div class="r-done">✅ You've submitted your rating for this question</div>`
-    : adminView?`<div style="font-size:13px;color:var(--md);margin-bottom:16px">Admin view — ratings shown below</div>`
-    : `<div style="font-size:13px;color:var(--md);margin-bottom:16px">Session closed</div>`
-    }
+    :done?`<div class="r-done">✅ You submitted your rating for this question</div>`
+    :adminView?`<div style="font-size:13px;color:var(--md);margin-bottom:16px">Admin view</div>`
+    :`<div style="font-size:13px;color:var(--md);margin-bottom:16px">Session closed</div>`}
     ${(s.isPublic||adminView)&&total?`
       <div class="r-sep"></div>
       <div class="r-res-ttl">Results · ${total} response${total!==1?'s':''}</div>
       <div class="rbars">${bars}</div>
       <div class="r-avg"><div class="r-avg-n">${avg}</div><div class="r-avg-s">/ 5 average score</div></div>`
-    : !total?`<div class="r-no-res">No ratings yet</div>`:''}
+    :!total?`<div class="r-no-res">No ratings yet</div>`:''}
   </div>`;
 }
 
 function selRating(qid,n){
   selR[qid]=n;
-  for(let i=1;i<=5;i++){const c=document.getElementById(`rc-${qid}-${i}`);if(c){c.classList.toggle('sel',i===n);}}
+  for(let i=1;i<=5;i++){const c=document.getElementById(`rc-${qid}-${i}`);if(c)c.classList.toggle('sel',i===n);}
   const d=document.getElementById('rsd-'+qid);
   if(d)d.innerHTML=`Selected: <strong>${EM[n]} ${n} — ${LB[n]}</strong>`;
 }
@@ -967,10 +1095,13 @@ function piH(fb,adminView,s){
   if(!fb||!fb.id)return'';
   const clr=piC(fb.id),rot=fb.rot||'0deg';
   const voted=S.voted.has(fb.id);
-  const canVote=!adminView&&s.isPublic&&s.open;
+  // Upvoting: available in public sessions for participants (not admin view)
+  // Anyone can vote, toggle on/off, no per-device restriction
+  const canVote=!adminView&&s.open;
+  const voteCount=fb.upvotes||0;
   const uvEl=canVote
-    ?`<button class="uvbtn${voted?' voted':''}" data-id="${esc(fb.id)}" onclick="upvote('${esc(fb.id)}',event)">+ ${fb.upvotes||0}</button>`
-    :`<span style="font-size:11px;opacity:.4">+ ${fb.upvotes||0}</span>`;
+    ?`<button class="uvbtn${voted?' voted':''}" data-id="${esc(fb.id)}" onclick="upvote('${esc(fb.id)}',event)">+${voteCount}</button>`
+    :`<span style="font-size:11px;opacity:.4">+${voteCount}</span>`;
   return`<div class="postit ${clr}" style="--rot:${rot}" id="pi-${esc(fb.id)}" data-id="${esc(fb.id)}" onclick="editPI(event,this)">
     <div class="pi-au">${fb.author?esc(fb.author):'Anonymous'}</div>
     <div class="pi-tx">${esc(fb.text)}</div>
@@ -981,7 +1112,7 @@ function piH(fb,adminView,s){
 function renderBoard(s){document.getElementById('fb-brd').innerHTML=buildBoard(s,false);}
 
 // ═══════════════════════════════════════════════════
-// SPAWN NEW POST-IT
+// SPAWN NEW POST-IT  (+ Add button fix: use event delegation)
 // ═══════════════════════════════════════════════════
 let actQid=null;
 
@@ -989,13 +1120,24 @@ function spawnNew(qid){
   const old=document.getElementById('pi-spawn');if(old)old.remove();
   if(!S.sess?.open)return;
   actQid=qid;
-  const grid=document.getElementById('grid-'+qid);if(!grid)return;
+  const grid=document.getElementById('grid-'+qid);
+  if(!grid){
+    // grid might not exist yet if board was just rendered — try zone
+    const zone=document.getElementById('zone-'+qid);
+    if(!zone)return;
+    // append grid inside zone
+    const newGrid=document.createElement('div');
+    newGrid.className='pi-grid'; newGrid.id='grid-'+qid;
+    zone.insertBefore(newGrid,zone.firstChild);
+  }
+  const targetGrid=document.getElementById('grid-'+qid);
+  if(!targetGrid)return;
   const div=document.createElement('div');
   div.className='pinew'; div.id='pi-spawn';
   div.innerHTML=`<div class="pn-au">${esc(S.who||'Anonymous')}</div><textarea class="pn-ta" id="pn-ta" placeholder="Type your thought…" rows="4"></textarea><div class="pn-ac"><button class="pn-post" onclick="postNew()">Post 📌</button><button class="pn-cx" onclick="cancelNew()">Cancel</button></div>`;
   div.addEventListener('dblclick',e=>e.stopPropagation());
   div.addEventListener('click',e=>e.stopPropagation());
-  grid.appendChild(div);
+  targetGrid.appendChild(div);
   setTimeout(()=>{const ta=document.getElementById('pn-ta');if(ta)ta.focus();},30);
 }
 
@@ -1032,7 +1174,7 @@ function editPI(ev,el){
   editId=fbId; editQid=qid;
   el.classList.add('editing');
   const body=el.querySelector('.pi-tx');if(!body)return;
-  body.outerHTML=`<textarea class="pi-eta" id="pi-eta" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()">${esc(fb.text)}</textarea><div class="pi-ebtns"><button class="pibtn cx" onclick="cancelEdit(event)">Cancel</button><button class="pibtn sv" onclick="saveEdit(event)">Save</button></div>`;
+  body.outerHTML=`<textarea class="pi-eta" id="pi-eta" onclick="event.stopPropagation()" ondblclick="event.stopPropagation()" onkeydown="if(event.key==='Escape')cancelEdit(event)">${esc(fb.text)}</textarea><div class="pi-ebtns"><button class="pibtn cx" onclick="cancelEdit(event)">Cancel</button><button class="pibtn sv" onclick="saveEdit(event)">Save</button></div>`;
   setTimeout(()=>{const ta=document.getElementById('pi-eta');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}},20);
 }
 
@@ -1050,25 +1192,39 @@ function cancelEdit(ev){if(ev)ev.stopPropagation();editId=null;editQid=null;}
 function closeEdit(){if(editId)cancelEdit(null);}
 
 // ═══════════════════════════════════════════════════
-// UPVOTE
+// UPVOTE — toggle, anyone can vote, count = total votes
 // ═══════════════════════════════════════════════════
 async function upvote(fbId,ev){
   ev.stopPropagation();
-  if(S.voted.has(fbId))return toast('Already upvoted','er');
-  S.voted.add(fbId); saveV();
+  const alreadyVoted=S.voted.has(fbId);
+  // Toggle: if already voted → remove vote, else add vote
   for(const qid in S.sess?.feedbacks||{}){
     const data=await dbG('sessions/'+S.code+'/feedbacks/'+qid);if(!data)continue;
     const entry=Object.entries(data).find(([k,v])=>v.id===fbId);
-    if(entry){await dbU('sessions/'+S.code+'/feedbacks/'+qid+'/'+entry[0],{upvotes:(entry[1].upvotes||0)+1});return;}
+    if(entry){
+      const [key,fb]=entry;
+      const cur=fb.upvotes||0;
+      const newCount=alreadyVoted?Math.max(0,cur-1):cur+1;
+      await dbU('sessions/'+S.code+'/feedbacks/'+qid+'/'+key,{upvotes:newCount});
+      if(alreadyVoted) S.voted.delete(fbId);
+      else S.voted.add(fbId);
+      saveV();
+      return;
+    }
   }
 }
 
 // ═══════════════════════════════════════════════════
-// URL ?join= PARAM
+// URL ?join= — fixed: only run once, prevent re-init loop
 // ═══════════════════════════════════════════════════
+let _urlJoinDone=false;
 function checkUrl(){
+  if(_urlJoinDone)return;
   const c=new URLSearchParams(location.search).get('join');
-  if(c)setTimeout(()=>goJoinScreen(c.toUpperCase()),200);
+  if(c){
+    _urlJoinDone=true;
+    setTimeout(()=>goJoinScreen(c.toUpperCase()),200);
+  }
 }
 
 // CLOSE spawn/edit on outside click
@@ -1082,7 +1238,6 @@ document.addEventListener('click',e=>{
 // INIT
 // ═══════════════════════════════════════════════════
 function init(){
-  loadV();
   const ld=document.getElementById('loader');
   ld.style.opacity='0';
   setTimeout(()=>{
@@ -1090,16 +1245,13 @@ function init(){
     go('home');
     checkUrl();
   },500);
-  // Show warning if Firebase DB not ready
   setTimeout(()=>{
-    if(!F()?.ok){
-      const w=document.getElementById('fb-warn');if(w)w.style.display='block';
-    }
+    if(!F()?.ok){const w=document.getElementById('fb-warn');if(w)w.style.display='block';}
   },1500);
 }
 
 document.addEventListener('fp-ready',()=>setTimeout(init,100));
-setTimeout(init,2500); // hard fallback
+setTimeout(init,2500);
 </script>
 </body>
 </html>
