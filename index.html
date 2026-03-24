@@ -591,7 +591,12 @@ async function adminLogin(){
   if(!u||!p)return toast('Enter username and password','er');
   setBtn('btn-li',true,'');
   try{
-    await F().signInWithEmailAndPassword(F().auth,toEmail(u),p);
+    const cred=await F().signInWithEmailAndPassword(F().auth,toEmail(u),p);
+    // Ensure admin record exists in DB (may be missing if reg had permission error)
+    const existing=await dG('admins/'+u);
+    if(!existing){
+      await dS('admins/'+u,{username:u,uid:cred.user.uid,createdAt:Date.now()});
+    }
     S.admin=u; document.getElementById('dash-w').textContent='Welcome back, '+u+'!';
     showList(); go('admin-dash');
   }catch(e){
@@ -610,19 +615,26 @@ async function adminReg(){
   if(p!==p2)return toast("Passwords don't match",'er');
   setBtn('btn-rg',true,'');
   try{
-    // Check username not already taken
-    const ex=await dG('admins/'+u+'/username');
-    if(ex){toast('Username already taken','er');return;}
-    // Create Firebase Auth account
+    // Step 1: Create Firebase Auth account (this signs the user in automatically)
     const cred=await F().createUserWithEmailAndPassword(F().auth,toEmail(u),p);
-    // Store username mapping
+    // Step 2: Now auth is active — wait a tick for token to be ready
+    await new Promise(r=>setTimeout(r,500));
+    // Step 3: Write username mapping (auth != null is now satisfied)
     await dS('admins/'+u,{username:u,uid:cred.user.uid,createdAt:Date.now()});
-    toast('Account created! Sign in now.');
+    // Step 4: Sign out so user signs in fresh
     await F().signOut(F().auth);
+    toast('Account created! Sign in now.');
     showReg(false);
   }catch(e){
+    // If db write failed after auth creation, still let them sign in
     if(e.code==='auth/email-already-in-use')toast('Username already taken','er');
     else if(e.code==='auth/weak-password')toast('Password too weak (min 6 chars)','er');
+    else if(e.message?.includes('PERMISSION_DENIED')){
+      // Auth account was created, db write failed — they can still sign in
+      toast('Account created! Sign in now.');
+      try{ await F().signOut(F().auth); }catch(ex){}
+      showReg(false);
+    }
     else toast('Error: '+e.message,'er');
   }
   finally{setBtn('btn-rg',false,'Create Account');}
