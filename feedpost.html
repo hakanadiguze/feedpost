@@ -19,6 +19,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getDatabase, ref, set, get, push, update, onValue, off, remove }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const cfg = {
   apiKey:"AIzaSyDes8OYXdKrI26VKsJMd-DHzA7M2Xo10Fc",
@@ -30,9 +32,11 @@ const cfg = {
   appId:"1:156401022471:web:cdba2ac8c6ea59a7899ca2"
 };
 try {
-  const app = initializeApp(cfg);
-  const db  = getDatabase(app);
-  window._FP = { db, ref, set, get, push, update, onValue, off, remove, ok:true };
+  const app  = initializeApp(cfg);
+  const db   = getDatabase(app);
+  const auth = getAuth(app);
+  window._FP = { db, ref, set, get, push, update, onValue, off, remove, auth,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, ok:true };
 } catch(e) {
   window._FP = { ok:false, err:e.message };
 }
@@ -525,6 +529,8 @@ const dU = async(p,v)=>F().update(dR(p),v);
 const dD = async p  =>F().remove(dR(p));
 const dOn =(p,cb)=>{ const r=dR(p); F().onValue(r,s=>cb(s.val())); return r; };
 const dOff=r=>{ if(r)F().off(r); };
+// Auth helpers — username is stored as display info, email = username@feedpost.app (internal)
+function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'')+'@feedpost.app'; }
 
 // ══════════════════════════════════════════════════
 // STATE
@@ -585,28 +591,43 @@ async function adminLogin(){
   if(!u||!p)return toast('Enter username and password','er');
   setBtn('btn-li',true,'');
   try{
-    const a=await dG('admins/'+u);
-    if(!a||a.password!==p){toast('Wrong username or password','er');return;}
+    await F().signInWithEmailAndPassword(F().auth,toEmail(u),p);
     S.admin=u; document.getElementById('dash-w').textContent='Welcome back, '+u+'!';
     showList(); go('admin-dash');
-  }catch(e){toast('Error: '+e.message,'er');}
+  }catch(e){
+    if(e.code==='auth/invalid-credential'||e.code==='auth/user-not-found'||e.code==='auth/wrong-password')
+      toast('Wrong username or password','er');
+    else toast('Error: '+e.message,'er');
+  }
   finally{setBtn('btn-li',false,'Sign In');}
 }
 async function adminReg(){
   if(!F()?.ok)return toast('Firebase not connected','er');
   const u=document.getElementById('rg-u').value.trim(),p=document.getElementById('rg-p').value,p2=document.getElementById('rg-p2').value;
   if(!u||!p)return toast('Fill all fields','er');
+  if(u.length<3)return toast('Username must be at least 3 characters','er');
+  if(p.length<6)return toast('Password must be at least 6 characters','er');
   if(p!==p2)return toast("Passwords don't match",'er');
   setBtn('btn-rg',true,'');
   try{
-    const ex=await dG('admins/'+u+'/password');
+    // Check username not already taken
+    const ex=await dG('admins/'+u+'/username');
     if(ex){toast('Username already taken','er');return;}
-    await dS('admins/'+u,{password:p});
-    toast('Account created! Sign in now.'); showReg(false);
-  }catch(e){toast('Error: '+e.message,'er');}
+    // Create Firebase Auth account
+    const cred=await F().createUserWithEmailAndPassword(F().auth,toEmail(u),p);
+    // Store username mapping
+    await dS('admins/'+u,{username:u,uid:cred.user.uid,createdAt:Date.now()});
+    toast('Account created! Sign in now.');
+    await F().signOut(F().auth);
+    showReg(false);
+  }catch(e){
+    if(e.code==='auth/email-already-in-use')toast('Username already taken','er');
+    else if(e.code==='auth/weak-password')toast('Password too weak (min 6 chars)','er');
+    else toast('Error: '+e.message,'er');
+  }
   finally{setBtn('btn-rg',false,'Create Account');}
 }
-function adminLogout(){S.admin=null;S.sess=null;stopLive();go('home');}
+function adminLogout(){F().signOut(F().auth).catch(()=>{});S.admin=null;S.sess=null;stopLive();go('home');}
 
 // ══════════════════════════════════════════════════
 // ADMIN — LIST
