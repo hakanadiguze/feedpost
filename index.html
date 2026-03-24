@@ -654,8 +654,21 @@ async function renderGrid(){
   const g=document.getElementById('sess-grid');
   g.innerHTML='<div class="empty"><div class="empty-ic">⏳</div><div class="empty-tt">Loading…</div></div>';
   try{
+    // Primary: get sessions from admin's list
     const codes=await dG('admins/'+S.admin+'/sessions')||{};
-    const cl=Object.values(codes).filter(Boolean);
+    let cl=Object.values(codes).filter(Boolean);
+    // Fallback: also scan all sessions for owner===S.admin (recovers orphaned sessions)
+    const allSessions=await dG('sessions')||{};
+    const owned=Object.values(allSessions).filter(s=>s&&s.owner===S.admin).map(s=>s.code);
+    // Merge without duplicates
+    const clSet=new Set([...cl,...owned]);
+    cl=[...clSet];
+    // Re-link any orphaned sessions back to admin's list
+    for(const code of owned){
+      if(![...new Set(Object.values(codes).filter(Boolean))].includes(code)){
+        await dP('admins/'+S.admin+'/sessions',code);
+      }
+    }
     if(!cl.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📋</div><div class="empty-tt">No sessions yet</div></div>';return;}
     const list=await Promise.all(cl.map(c=>dG('sessions/'+c)));
     const valid=list.filter(Boolean).sort((a,b)=>b.createdAt-a.createdAt);
