@@ -19,7 +19,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getDatabase, ref, set, get, push, update, onValue, off, remove }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const cfg = {
@@ -35,8 +35,9 @@ try {
   const app  = initializeApp(cfg);
   const db   = getDatabase(app);
   const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
   window._FP = { db, ref, set, get, push, update, onValue, off, remove, auth,
-    createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, ok:true };
+    googleProvider, signInWithPopup, signOut, onAuthStateChanged, ok:true };
 } catch(e) {
   window._FP = { ok:false, err:e.message };
 }
@@ -256,6 +257,9 @@ textarea.fc{resize:vertical;min-height:80px}
 .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 .divider{height:1px;background:rgba(26,26,46,.08);margin:20px 0}
+.google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 24px;border-radius:var(--r2);border:2px solid rgba(26,26,46,.12);background:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:var(--dk);cursor:pointer;transition:all .18s;box-shadow:var(--s1)}
+.google-btn:hover{border-color:var(--or);box-shadow:var(--s2);transform:translateY(-1px)}
+.google-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .pttl{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--dk);letter-spacing:-.4px}
 .tmd{color:var(--md)}.tsm{font-size:13px}.mt8{margin-top:8px}.mt16{margin-top:16px}.mt20{margin-top:20px}.mt24{margin-top:24px}
 .row{display:flex;align-items:center}.rowb{justify-content:space-between}.fw{flex-wrap:wrap}.g8{gap:8px}.g12{gap:12px}
@@ -344,32 +348,17 @@ textarea.fc{resize:vertical;min-height:80px}
 <div id="admin-login" class="sc">
   <div class="tb">
     <button class="logo" onclick="go('home')"><div class="logo-ic"><svg width="20" height="20" viewBox="0 0 36 36" fill="none"><rect x="5" y="7" width="26" height="22" rx="5" fill="white" opacity=".9"/><rect x="9" y="14" width="18" height="3.5" rx="1.75" fill="#FF6B35"/><rect x="9" y="21" width="11" height="3.5" rx="1.75" fill="#00C9B8"/></svg></div>Feed<em>Post</em></button>
-    <div class="tb-r"><button class="hbtn" onclick="toggleH('hp-li')">? Help</button><button class="btn b-gh b-sm" onclick="go('home')">← Home</button></div>
-  </div>
-  <div class="hpanel" id="hp-li"><div class="hpttl">Admin Login <button class="hpx" onclick="toggleH('hp-li')">✕</button></div>
-    <div class="hps"><div class="hpn">1</div><div>Enter your <b>username & password</b> then click Sign In.</div></div>
-    <div class="hps"><div class="hpn">2</div><div>New? Click <b>Register</b> — no email needed.</div></div>
-    <div class="hps"><div class="hpn">3</div><div>Your sessions are stored in the cloud — accessible from any device.</div></div>
+    <div class="tb-r"><button class="btn b-gh b-sm" onclick="go('home')">← Home</button></div>
   </div>
   <div class="auth-w"><div class="auth-c">
-    <div id="fb-warn" class="warn" style="display:none">⚠️ <b>Firebase Realtime Database not set up.</b> Go to Firebase Console → Build → Realtime Database → Create Database → Test mode.</div>
+    <div id="fb-warn" class="warn" style="display:none">⚠️ <b>Firebase not set up correctly.</b> Check console for details.</div>
     <div class="auth-ic">🔐</div>
-    <div class="auth-tt">Admin Login</div><div class="auth-sb">Sign in or create an account</div>
-    <div id="f-li">
-      <div class="fg"><label class="fl">Username</label><input id="li-u" class="fc" type="text" placeholder="your_username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('li-p').focus()"></div>
-      <div class="fg"><label class="fl">Password</label><input id="li-p" class="fc" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-      <button class="btn b-or b-lg" style="width:100%" id="btn-li" onclick="adminLogin()">Sign In</button>
-      <div class="divider"></div>
-      <p class="tsm tmd" style="text-align:center">No account? <button class="btn b-out b-sm" style="margin-left:8px" onclick="showReg(true)">Register</button></p>
-    </div>
-    <div id="f-rg" style="display:none">
-      <div class="fg"><label class="fl">Username</label><input id="rg-u" class="fc" type="text" placeholder="choose_username" onkeydown="if(event.key==='Enter')document.getElementById('rg-p').focus()"></div>
-      <div class="fg"><label class="fl">Password</label><input id="rg-p" class="fc" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')document.getElementById('rg-p2').focus()"></div>
-      <div class="fg"><label class="fl">Confirm Password</label><input id="rg-p2" class="fc" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminReg()"></div>
-      <button class="btn b-tl b-lg" style="width:100%" id="btn-rg" onclick="adminReg()">Create Account</button>
-      <div class="divider"></div>
-      <p class="tsm tmd" style="text-align:center">Have one? <button class="btn b-out b-sm" style="margin-left:8px" onclick="showReg(false)">Sign In</button></p>
-    </div>
+    <div class="auth-tt">Admin Login</div>
+    <div class="auth-sb" style="margin-bottom:32px">Sign in with your Google account to manage feedback sessions</div>
+    <button class="google-btn" id="btn-google" onclick="adminLoginGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Sign in with Google
+    </button>
   </div></div>
 </div>
 
@@ -529,15 +518,15 @@ const dU = async(p,v)=>F().update(dR(p),v);
 const dD = async p  =>F().remove(dR(p));
 const dOn =(p,cb)=>{ const r=dR(p); F().onValue(r,s=>cb(s.val())); return r; };
 const dOff=r=>{ if(r)F().off(r); };
-// Auth helpers — username is stored as display info, email = username@feedpost.app (internal)
-function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'')+'@feedpost.app'; }
+// Auth helper — derive a stable admin key from Google email
+function emailToKey(email){ return email.replace(/[.@]/g,'_').toLowerCase(); }
 
 // ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
 const S={
   admin:null, sess:null, code:null, who:null,
-  pendQs:[], pendQT:null, liveRef:null,
+  pendQs:[], pendQT:null, liveRef:null, adminName:null,
   newPIqid:null,
   instanceId:null,  // unique per session ENTRY — ensures each join is independent
   voted:new Set(),  // fbIds upvoted in THIS session entry
@@ -582,64 +571,66 @@ function hTab(i,el){document.querySelectorAll('.htu-tab').forEach(t=>t.classList
 function toggleH(id){const p=document.getElementById(id),w=p.classList.contains('on');document.querySelectorAll('.hpanel').forEach(x=>x.classList.remove('on'));if(!w)p.classList.add('on');}
 
 // ══════════════════════════════════════════════════
-// AUTH
+// AUTH — Google Sign-In
 // ══════════════════════════════════════════════════
-function showReg(s){document.getElementById('f-li').style.display=s?'none':'block';document.getElementById('f-rg').style.display=s?'block':'none';}
-async function adminLogin(){
+async function adminLoginGoogle(){
   if(!F()?.ok)return toast('Firebase not connected','er');
-  const u=document.getElementById('li-u').value.trim(),p=document.getElementById('li-p').value;
-  if(!u||!p)return toast('Enter username and password','er');
-  setBtn('btn-li',true,'');
+  setBtn('btn-google',true,'');
+  document.getElementById('btn-google').innerHTML='<div class="spin" style="border-top-color:var(--or)"></div> Signing in…';
   try{
-    const cred=await F().signInWithEmailAndPassword(F().auth,toEmail(u),p);
-    // Ensure admin record exists in DB (may be missing if reg had permission error)
-    const existing=await dG('admins/'+u);
+    const result=await F().signInWithPopup(F().auth, F().googleProvider);
+    const user=result.user;
+    const email=user.email;
+    const displayName=user.displayName||email.split('@')[0];
+    const adminKey=emailToKey(email);
+    // Upsert admin record — preserve existing sessions list
+    const existing=await dG('admins/'+adminKey);
     if(!existing){
-      await dS('admins/'+u,{username:u,uid:cred.user.uid,createdAt:Date.now()});
+      await dS('admins/'+adminKey,{
+        username:displayName, email:email,
+        uid:user.uid, createdAt:Date.now()
+      });
+    } else {
+      // Update display name and uid in case they changed
+      await dU('admins/'+adminKey,{username:displayName,email:email,uid:user.uid});
     }
-    S.admin=u; document.getElementById('dash-w').textContent='Welcome back, '+u+'!';
+    // Also check if there's a legacy "Hakan" account with same email and migrate sessions
+    await migrateLegacySessions(adminKey);
+    S.admin=adminKey;
+    S.adminName=displayName;
+    document.getElementById('dash-w').textContent='Welcome, '+displayName+'!';
     showList(); go('admin-dash');
   }catch(e){
-    if(e.code==='auth/invalid-credential'||e.code==='auth/user-not-found'||e.code==='auth/wrong-password')
-      toast('Wrong username or password','er');
+    if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')
+      toast('Sign-in cancelled','er');
+    else if(e.code==='auth/popup-blocked')
+      toast('Popup blocked — allow popups for this site','er');
     else toast('Error: '+e.message,'er');
+    document.getElementById('btn-google').innerHTML='<svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Sign in with Google';
+    setBtn('btn-google',false,'');
   }
-  finally{setBtn('btn-li',false,'Sign In');}
 }
-async function adminReg(){
-  if(!F()?.ok)return toast('Firebase not connected','er');
-  const u=document.getElementById('rg-u').value.trim(),p=document.getElementById('rg-p').value,p2=document.getElementById('rg-p2').value;
-  if(!u||!p)return toast('Fill all fields','er');
-  if(u.length<3)return toast('Username must be at least 3 characters','er');
-  if(p.length<6)return toast('Password must be at least 6 characters','er');
-  if(p!==p2)return toast("Passwords don't match",'er');
-  setBtn('btn-rg',true,'');
+
+// Migrate sessions from legacy username-based account (e.g. "Hakan") to new email-based key
+async function migrateLegacySessions(newAdminKey){
   try{
-    // Step 1: Create Firebase Auth account (this signs the user in automatically)
-    const cred=await F().createUserWithEmailAndPassword(F().auth,toEmail(u),p);
-    // Step 2: Now auth is active — wait a tick for token to be ready
-    await new Promise(r=>setTimeout(r,500));
-    // Step 3: Write username mapping (auth != null is now satisfied)
-    await dS('admins/'+u,{username:u,uid:cred.user.uid,createdAt:Date.now()});
-    // Step 4: Sign out so user signs in fresh
-    await F().signOut(F().auth);
-    toast('Account created! Sign in now.');
-    showReg(false);
-  }catch(e){
-    // If db write failed after auth creation, still let them sign in
-    if(e.code==='auth/email-already-in-use')toast('Username already taken','er');
-    else if(e.code==='auth/weak-password')toast('Password too weak (min 6 chars)','er');
-    else if(e.message?.includes('PERMISSION_DENIED')){
-      // Auth account was created, db write failed — they can still sign in
-      toast('Account created! Sign in now.');
-      try{ await F().signOut(F().auth); }catch(ex){}
-      showReg(false);
+    // Scan all sessions where owner matches known legacy names
+    const allSess=await dG('sessions')||{};
+    const legacyOwned=Object.values(allSess).filter(s=>s&&s.owner==='Hakan'&&s.owner!==newAdminKey);
+    for(const sess of legacyOwned){
+      // Add to new admin's sessions list
+      await dP('admins/'+newAdminKey+'/sessions',sess.code);
+      // Update session owner to new key
+      await dU('sessions/'+sess.code,{owner:newAdminKey});
     }
-    else toast('Error: '+e.message,'er');
-  }
-  finally{setBtn('btn-rg',false,'Create Account');}
+  }catch(e){/* silent — migration is best-effort */}
 }
-function adminLogout(){F().signOut(F().auth).catch(()=>{});S.admin=null;S.sess=null;stopLive();go('home');}
+
+function adminLogout(){
+  F().signOut(F().auth).catch(()=>{});
+  S.admin=null; S.adminName=null; S.sess=null;
+  stopLive(); go('home');
+}
 
 // ══════════════════════════════════════════════════
 // ADMIN — LIST
